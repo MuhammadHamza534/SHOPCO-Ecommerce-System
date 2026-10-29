@@ -3,10 +3,10 @@ import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import DashboardLayout from "./components/DashboardLayout";
 import ProductsManager from "./pages/ProductsManager";
 import DashboardLive from "./pages/DashboardLive";
-import UsersLive from "./pages/UsersLive";
+import UsersManagement from "./pages/UsersManagement";
 import { Categories, Coupons, Inventory, Newsletter, Settings } from "./pages/Operations";
 import ProductMedia from "./pages/ProductMediaSafe";
-import OrdersPro from "./pages/OrdersProSafe";
+import OrdersManagement from "./pages/OrdersManagement";
 import OrderDetailAdmin from "./pages/OrderDetailAdminSafe";
 import Reports from "./pages/Reports";
 import AdminErrorBoundary from "./components/AdminErrorBoundary";
@@ -28,10 +28,10 @@ function App() {
       <Route element={<ProtectedDashboard />}>
         <Route index element={<DashboardLive />} />
 
-        <Route path="/orders" element={<OrdersPro />} />
+        <Route path="/orders" element={<OrdersManagement />} />
         <Route path="/orders/:id" element={<OrderDetailAdmin />} />
 
-        <Route path="/users" element={<UsersLive />} />
+        <Route path="/users" element={<UsersManagement />} />
 
         <Route path="/products" element={<ProductsManager />} />
         <Route path="/products/:id/images" element={<ProductMedia />} />

@@ -47,6 +47,8 @@ export const adminApi = {
   categories() { return request("/rest/v1/categories?select=id,name,slug,description,is_active,display_order&order=display_order.asc"); },
   saveCategory(category) { const { id, ...row } = category; return request(`/rest/v1/categories${id ? `?id=eq.${id}` : ""}`, { method: id ? "PATCH" : "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify(row) }); },
   customers() { return request("/rest/v1/rpc/admin_customers", { method: "POST", body: "{}" }); },
+  deleteCustomer(id) { return request("/rest/v1/rpc/admin_delete_customer", { method: "POST", body: JSON.stringify({ p_customer_id: id }) }); },
+  deleteTestOrder(id) { return request("/rest/v1/rpc/admin_delete_test_order", { method: "POST", body: JSON.stringify({ p_order_id: id }) }); },
   coupons() { return request("/rest/v1/coupons?select=*&order=created_at.desc"); },
   saveCoupon(coupon) { const { id, ...row } = coupon; return request(`/rest/v1/coupons${id ? `?id=eq.${id}` : ""}`, { method: id ? "PATCH" : "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify(row) }); },
   newsletter(status = "") { return request(`/rest/v1/newsletter_subscribers?select=*&order=created_at.desc${status ? `&status=eq.${status}` : ""}`); },

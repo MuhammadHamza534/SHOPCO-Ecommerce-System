@@ -80,6 +80,14 @@ export const storeApi = {
   async signIn(email, password) {
     const session = await request("/auth/v1/token?grant_type=password", { method: "POST", body: JSON.stringify({ email, password }) });
     saveSession(session);
+    try {
+      const profile = await request("/rest/v1/profiles?select=id,status&limit=1").then((rows) => rows[0] || null);
+      if (!profile) { const error = new Error("Your customer profile is not ready yet. Please try again shortly."); error.code = "profile_missing"; throw error; }
+      if (profile.status !== "active") { const error = new Error("This customer account is currently restricted."); error.code = "account_restricted"; throw error; }
+    } catch (error) {
+      clearSession();
+      throw error;
+    }
     return session;
   },
   async signOut() {
