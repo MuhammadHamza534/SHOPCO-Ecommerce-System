@@ -1,0 +1,15 @@
+/* eslint-disable react-hooks/set-state-in-effect */
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Package, ShoppingBag } from "lucide-react";
+import { adminApi } from "../lib/supabase";
+const statuses = ["pending", "confirmed", "processing", "packed", "shipped", "out_for_delivery", "delivered", "cancelled", "returned", "refunded"];
+const label = (value) => value.replaceAll("_", " ").replace(/\b\w/g, (x) => x.toUpperCase());
+function OrdersLive() {
+ const [orders, setOrders] = useState([]); const [params] = useSearchParams(); const [term, setTerm] = useState(params.get("search") || ""); const [error, setError] = useState(""); const [loading, setLoading] = useState(true);
+ async function load() { setLoading(true); try { setOrders(await adminApi.orders()); } catch (e) { setError(e.message); } finally { setLoading(false); } } useEffect(() => { load(); }, []);
+ const visible = useMemo(() => orders.filter((o) => `${o.order_number} ${o.customer_name} ${o.customer_email}`.toLowerCase().includes(term.toLowerCase())), [orders, term]);
+ async function change(id, status) { try { const updated = await adminApi.updateOrder(id, status); setOrders((list) => list.map((item) => item.id === id ? updated[0] : item)); } catch (e) { setError(e.message); } }
+ return <div className="page orders-page"><div className="page-heading"><div><h1>Orders</h1><p>Manage the complete order lifecycle and payment status.</p></div><div className="page-count"><ShoppingBag size={18}/>{visible.length} Orders</div></div><input className="table-filter" value={term} onChange={(e) => setTerm(e.target.value)} placeholder="Search order number, customer, or email" />{error && <p className="auth-message error">{error}</p>}{loading ? <p>Loading orders…</p> : <section className="data-panel desktop-data-table"><div className="table-scroll"><table className="dashboard-table orders-table"><thead><tr><th>Order</th><th>Customer</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th></tr></thead><tbody>{visible.length ? visible.map((order) => <tr key={order.id}><td><strong className="order-number">#{order.order_number}</strong><small>{label(order.payment_status)}</small></td><td><div className="customer-cell"><span className="customer-avatar">{order.customer_name?.split(" ").map((x) => x[0]).join("")}</span><div><strong>{order.customer_name}</strong><small>{order.customer_email}</small></div></div></td><td>{new Date(order.created_at).toLocaleDateString()}</td><td>{order.item_count}</td><td><strong className="order-total">${Number(order.total_amount).toFixed(2)}</strong></td><td><select value={order.status} className={`order-status status-${order.status}`} onChange={(e) => change(order.id, e.target.value)}>{statuses.map((status) => <option value={status} key={status}>{label(status)}</option>)}</select></td></tr>) : <tr><td colSpan="6" className="table-not-found"><Package size={37}/><strong>No orders found</strong><span>Orders will appear here after checkout succeeds.</span></td></tr>}</tbody></table></div></section>}</div>;
+}
+export default OrdersLive;

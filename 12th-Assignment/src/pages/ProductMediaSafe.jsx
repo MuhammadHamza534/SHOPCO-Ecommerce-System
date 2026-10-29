@@ -1,0 +1,13 @@
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { Trash2, Upload } from "lucide-react";
+import { adminApi } from "../lib/supabase";
+
+export default function ProductMediaSafe() {
+  const { id } = useParams(); const [images, setImages] = useState([]); const [file, setFile] = useState(null); const [message, setMessage] = useState(""); const [busy, setBusy] = useState(false);
+  async function loadImages() { try { setImages(await adminApi.images(id)); } catch (loadError) { setMessage(loadError.message); } }
+  useEffect(() => { let active = true; adminApi.images(id).then((rows) => { if (active) setImages(rows || []); }).catch((loadError) => { if (active) setMessage(loadError.message); }); return () => { active = false; }; }, [id]);
+  async function upload(event) { event.preventDefault(); if (!file) return; setBusy(true); try { await adminApi.uploadProductImage(id, file, images.length); setFile(null); setMessage("Image uploaded."); await loadImages(); } catch (uploadError) { setMessage(uploadError.message); } finally { setBusy(false); } }
+  async function remove(image) { if (!window.confirm("Remove this product image?")) return; setBusy(true); try { await adminApi.removeProductImage(image); setMessage("Image removed."); await loadImages(); } catch (removeError) { setMessage(removeError.message); } finally { setBusy(false); } }
+  return <div className="page"><div className="page-heading"><div><h1>Product images</h1><p>Manage gallery media for this product.</p></div><Link className="secondary-button" to="/products">Back to products</Link></div>{message && <p className="auth-message">{message}</p>}<section className="data-panel"><form className="product-form" onSubmit={upload}><label className="full-field"><span>Gallery image</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={(event) => setFile(event.target.files?.[0] || null)} /></label><button className="primary-button" disabled={!file || busy}><Upload size={17}/>{busy ? "Uploading…" : "Upload image"}</button></form></section><section className="products-grid">{images.map((image, index) => <article className="product-card" key={image.id}><div className="product-image"><img src={image.url} alt={image.alt_text || "Product"}/></div><div className="product-content"><strong>{index === 0 ? "Main image" : "Gallery image"}</strong><small>Position {image.position}</small></div><div className="product-actions"><button type="button" className="delete-button" disabled={busy} onClick={() => remove(image)}><Trash2 size={16}/>Remove</button></div></article>)}</section></div>;
+}
